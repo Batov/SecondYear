@@ -24,7 +24,7 @@ namespace BatovSE
 
         private void button1_Click(object sender, EventArgs e)
         {
-			int[] xy = new int[8];
+            int[] xy = new int[8];
             Random rnd = new Random(); 
             for (int i = 0; i < 8; ++i)
             {
