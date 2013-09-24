@@ -40,7 +40,7 @@ fib n = fib' n (0,1)
 
 --fraction
 
-reduce (x,y) = (div x (gcd x y), div y (gcd x y))
+reduce (x,y) = (div x g, div y g) where g = gcd x y
 
 infixl 7 *\
 (x1,y1) *\ (x2,y2) = reduce (x1*x2, y1*y2)
@@ -90,7 +90,7 @@ lessThPol _ [] = False
 lessThPol [] _ = True
 lessThPol (x:xs) (x':xs') = (lessThMon x x' || (x == x' && lessThPol xs xs'))
 
-divMon (n, e) (n', e') = (n /\ n, e - e')
+divMon (n, e) (n', e') = (n /\ n', e - e')
 
 
 divPol divend divor@(x:_) =
