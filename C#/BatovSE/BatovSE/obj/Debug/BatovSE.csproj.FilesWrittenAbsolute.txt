@@ -1,0 +1,7 @@
+/home/batov/SecondYear/C#/BatovSE/BatovSE/obj/Debug/BatovSE.Form1.resources
+/home/batov/SecondYear/C#/BatovSE/BatovSE/obj/Debug/BatovSE.Properties.Resources.resources
+/home/batov/SecondYear/C#/BatovSE/BatovSE/bin/Debug/BatovSE.exe.config
+/home/batov/SecondYear/C#/BatovSE/BatovSE/bin/Debug/BatovSE.exe.mdb
+/home/batov/SecondYear/C#/BatovSE/BatovSE/bin/Debug/BatovSE.exe
+/home/batov/SecondYear/C#/BatovSE/BatovSE/obj/Debug/BatovSE.exe
+/home/batov/SecondYear/C#/BatovSE/BatovSE/obj/Debug/BatovSE.exe.mdb

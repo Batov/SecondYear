@@ -9,7 +9,6 @@ namespace BatovSE
 {
     static class Program
     {
-        //[STAThread]
         static void Main()
         {
             Form1 win = new Form1();
