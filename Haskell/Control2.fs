@@ -28,6 +28,8 @@ isInjective fl = length [False |(x1,y1) <- fl , (x2,y2) <- fl, y2 == y1 && x2 /=
 
 isSurjective :: [(Integer,Integer)] -> Bool
 isSurjective _ = True
+--Область значений табличной функции это все y = snd f
+--Для любого y мы найдем x
 
 areMutuallyInverse :: [(Integer,Integer)] -> [(Integer,Integer)] -> Bool
 areMutuallyInverse f1l f2l = f1l == invert f2l 
