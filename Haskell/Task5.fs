@@ -7,19 +7,23 @@ insert (Node a h l r) x
 	| otherwise = Node a h l r
 
 
+
 getH Empty = 0
 getH (Node _ h _ _) = h
 
 setH Empty = Empty
 setH (Node a _ l r) = Node a (max (getH l) (getH r) +1) l r
 
-LR (Node a h (Node al hl ll lr) r) = setH (Node al -1 ll (setH (Node a -1 lr r))) 
-RR (Node a h l (Node ar hr rl rr)) = setH (Node ar -1 (setH (Node a -1 l rl)) rr)
+lR (Node a h (Node al hl ll lr) r) = setH (Node al 0 ll (setH (Node a 0 lr r))) 
+rR (Node a h l (Node ar hr rl rr)) = setH (Node ar 0 (setH (Node a 0 l rl)) rr)
 
---balance (Node a h l@(Node al hl ll rl) r@(Node ar hr lr rr)) 
---	| hr+1<hl = Node al hl (balance ll) (balance (Node a hl-1 rl r))
---	| hl+1<hr = Node ar hr (balance (Node a hr-1 l lr)) (balance rr)
---	| otherwise = Node a h (balance l) (balance r)
---balance (Node a h (Node al hl ll rl) Empty) = Node al h (balance ll) (balance (Node a hl rl Empty))
---balance (Node a h Empty (Node ar hr lr rr)) = Node ar h (balance (Node a hr Empty lr)) (balance rr)
---balance Empty = Empty
+dbh (Node _ _ l r) = (getH l) - (getH r)
+dbh Empty = 0
+
+balance nd@(Node a h l r)
+	| dbh nd -1 > 0 && dbh r >  0 = setH $ lR nd
+	| dbh nd -1 > 0 && dbh r <= 0 = setH $ lR (Node a h l (rR r))
+	| dbh nd +1 < 0 && dbh l <  0 = setH $ rR nd
+	| dbh nd +1 < 0 && dbh r >= 0 = setH $ rR (Node a h (lR l) r)
+	| otherwise = nd
+
