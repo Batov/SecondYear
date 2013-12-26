@@ -1,20 +1,15 @@
-//Batov Nikita, SPBU, Math, 2013.
-
 type Syncer(maxTasks : int) = 
-    let Queue    = ref 1 //First task
+    let  Queue = ref 1
     let MaxTasks = ref maxTasks
-
-    let safeReadQueue = lock Queue (fun() -> !Queue)
-    let safeIncQueue  =  lock Queue (fun() -> Queue := !Queue + 1)
-
-    member this.IsMyTurn taskNum = taskNum = safeReadQueue  // Check task's turn   
-    member this.NextTask() = 
-        if !MaxTasks = safeReadQueue
+    member this.IsMyQueue taskNum = 
+        taskNum = lock Queue (fun() -> !Queue)      
+    member this.NextTask() =
+        if !MaxTasks = lock Queue (fun() -> !Queue)
             then
                 Queue := 0
                 printfn "All Tasks completed"
             else
-                safeIncQueue
+               lock Queue (fun() -> Queue := !Queue + 1)
 
 let countOfTasks = 100
 let syncer = new Syncer(countOfTasks)
@@ -23,13 +18,13 @@ let rand = new System.Random()
 let task (num:int) = async {  
                         let time = rand.Next(1,1000)
                         do! Async.Sleep(time) //emulation of real work
-                        while (syncer.IsMyTurn num <> true) do
+                        while (syncer.IsMyQueue num <> true) do
                             ignore() //waiting 
                             do! Async.Sleep(5)
                         printfn "Task, Number = %A, Time = %A ms, finished!" num time
                         syncer.NextTask()
                      }
 
-[for i in 1 .. countOfTasks -> task i]  |> Async.Parallel  |> Async.RunSynchronously |>  ignore
+[for i in 1 .. countOfTasks -> task i]  |> Async.Parallel |> Async.RunSynchronously |> ignore
 
 System.Console.Read() |> ignore
