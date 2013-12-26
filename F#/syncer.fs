@@ -30,6 +30,6 @@ let task (num:int) = async {
                         syncer.NextTask()
                      }
 
-[for i in 1 .. countOfTasks -> task i]  |> Async.Parallel |>  ignore
+[for i in 1 .. countOfTasks -> task i]  |> Async.Parallel  |> Async.RunSynchronously |>  ignore
 
 System.Console.Read() |> ignore
