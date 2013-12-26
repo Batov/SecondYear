@@ -1,11 +1,16 @@
-open System.Collections.Generic
 open System
 open System.Net
+open System.Xml
 open System.IO
-open System.Threading
-open System.Text.RegularExpressions
+open Microsoft.FSharp.Control.WebExtensions
+open System.Drawing
+open System.Windows.Forms
 open HtmlAgilityPack
+open System.Collections.Concurrent
 open FSharp.Control
+
+let visited = new ConcurrentDictionary<string, bool>()
+let downloaded = new ConcurrentDictionary<string, bool>()
 
 type System.Net.WebClient with
     member x.AsyncDownloadData(url: string) = 
@@ -21,65 +26,64 @@ type System.Net.WebClient with
                                 x.DownloadDataAsync(new Uri(url)))
 
 
-let downloadDocument url = async {
-  try let wc = new WebClient()
-      let! html = wc.AsyncDownloadString(Uri(url))
-      let doc = new HtmlDocument()
-      doc.LoadHtml(html)
-      return Some doc 
-  with _ -> return None }
-
-let extractLinks (doc:HtmlDocument) = 
-  try
-    [ for a in doc.DocumentNode.SelectNodes("//a") do
-        if a.Attributes.Contains("href") then
-          let href = a.Attributes.["href"].Value
-          if href.StartsWith("http://") then 
-            let endl = href.IndexOf('?')
-            yield if endl > 0 then href.Substring(0, endl) else href ]
-  with _ -> []
-
-let extractPics (doc:HtmlDocument) = 
-  try
-    [ for a in doc.DocumentNode.SelectNodes("//img") do
-       let ref = a.Attributes.["src"].Value
-       if ref.EndsWith(".jpg") || ref.EndsWith(".png") || ref.EndsWith(".gif") then
-        yield a.Attributes.["src"].Value ]
-  with _ -> []
-
-
 let downloadFileAsync (sourceUrl:string) =
     async { 
             let wc = new WebClient()
             let! response = wc.AsyncDownloadData(sourceUrl)
             let filename = Path.GetFileName(sourceUrl)
-            printfn "%A" filename
+            printfn "new file = %A" filename
             File.WriteAllBytes(filename, response) 
-            }
-let downloadFile (sourceUrl:string) =
-             let wc = new WebClient()
-             let filename = Path.GetFileName(sourceUrl)
-             let response = wc.DownloadData(new Uri(sourceUrl))
-             printfn "%A" filename
-             File.WriteAllBytes(filename, response) 
+          }
 
-let rec Crawler url = 
-  let visited = new System.Collections.Generic.HashSet<_>()
-  let rec loop url = asyncSeq {
-    if visited.Add(url) then
-      let! doc = downloadDocument url
-      match doc with 
-      | Some doc ->
-          for piclink in extractPics doc do
-             yield piclink
-          for link in extractLinks doc do
-            yield! loop link 
-      | _ -> () }
-  loop url
 
-Crawler "http://news.bing.com"
-//|> AsyncSeq.take 100
-//|> AsyncSeq.iterAsync downloadFileAsync
-|> AsyncSeq.iter downloadFile
-|> Async.StartImmediate
+let extractLinks (doc:HtmlDocument) = 
+    try
+        [ for nd in doc.DocumentNode.SelectNodes("//a[@href]") do
+            if nd.Attributes.["href"].Value.StartsWith("http://") then yield nd.Attributes.["href"].Value ]
+    with _ -> []
+
+let extractPics (doc:HtmlDocument) = 
+    try
+        [ for nd in doc.DocumentNode.SelectNodes("//img") do
+            let src = nd.Attributes.["src"].Value
+            if src.EndsWith(".jpg") || src.EndsWith(".jpeg") || src.EndsWith(".png") || src.EndsWith(".gif")   then yield src ]
+    with _ -> []
+
+let downloadDocument (url:string) = 
+    async {
+    try
+        let webClient = new WebClient()
+        let! html = webClient.AsyncDownloadString(Uri(url))
+        let doc = new HtmlDocument()
+        doc.LoadHtml(html)
+        return Some doc
+    with
+        | _ -> return None
+    }
+
+let rec Crawler(url:string) = asyncSeq {
+    if not(visited.ContainsKey(url)) 
+      then
+        visited.GetOrAdd(url, true) |> ignore 
+        let! doc = downloadDocument url
+        match doc with
+        | Some doc ->
+            for pic in extractPics doc do 
+                yield pic 
+            for link in extractLinks doc do
+                yield! Crawler link 
+        | _ -> ()
+}
+
+
+
+Crawler "http://www.bing.com"
+    |> AsyncSeq.take 10
+    |> AsyncSeq.iterAsync downloadFileAsync
+    |> Async.Start
+
+#if COMPILED
+[<STAThread()>]
+ Application.Run()
+#endif
 
